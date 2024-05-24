@@ -4,75 +4,213 @@ const { BinarySearchTree, TreeNode } = require('./binary-search-tree.js');
 
 // Practice problems on binary trees
 
-function findMinBST (rootNode) {
-  // Your code here 
+function findMinBST(rootNode) {
+  if (!rootNode) return null;
+
+  let current = rootNode;
+  while (current.left) {
+    current = current.left
+  }
+
+  return current.val;
 }
 
-function findMaxBST (rootNode) {
-  // Your code here 
+function findMaxBST(rootNode) {
+  if (!rootNode) return null;
+
+  let current = rootNode;
+  while (current.right) {
+    current = current.right;
+  }
+
+  return current.val;
 }
 
-function findMinBT (rootNode) {
-  // Your code here 
+function findMinBT(rootNode) {
+  if (!rootNode) return null;
+
+  let min = rootNode.val;
+  const traverse = (node) => {
+    if (!node) return;
+    min = Math.min(min, node.val);
+    traverse(node.left)
+    traverse(node.right)
+  }
+  traverse(rootNode)
+  return min;
 }
 
-function findMaxBT (rootNode) {
-  // Your code here 
+function findMaxBT(rootNode) {
+  if (!rootNode) return null;
+
+  let max = rootNode.val;
+  const traverse = (node) => {
+    if (!node) return;
+    max = Math.max(max, node.val);
+    traverse(node.left);
+    traverse(node.right);
+  };
+  traverse(rootNode);
+  return max;
 }
 
-function getHeight (rootNode) {
-  // Your code here 
+function getHeight(rootNode) {
+  if (!rootNode) return -1;
+
+  const leftHeight = getHeight(rootNode.left);
+  const rightHeight = getHeight(rootNode.right);
+
+  return Math.max(leftHeight, rightHeight) + 1;
 }
 
-function balancedTree (rootNode) {
-  // Your code here 
+function balancedTree(rootNode) {
+  if (!rootNode) return true;
+
+  const heightDiff = Math.abs(getHeight(rootNode.left) - getHeight(rootNode.right));
+  if (heightDiff > 1) {
+    return false;
+  }
+
+  return balancedTree(rootNode.left) && balancedTree(rootNode.right);
 }
 
-function countNodes (rootNode) {
-  // Your code here 
+function countNodes(rootNode) {
+  if (!rootNode) return 0;
+
+  return 1 + countNodes(rootNode.left) + countNodes(rootNode.right);
 }
 
-function getParentNode (rootNode, target) {
-  // Your code here 
+function getParentNode(rootNode, target) {
+  if (!rootNode || !target) return undefined;
+
+  if (rootNode.val === target) return null;
+
+  const findParent = (node, targetVal) => {
+    if (!node) return undefined;
+
+    if ((node.left && node.left.val === targetVal) || (node.right && node.right.val === targetVal)) {
+      return node;
+    }
+    const leftResult = findParent(node.left, targetVal);
+    if (leftResult !== undefined) return leftResult;
+    return findParent(node.right, targetVal);
+  };
+
+  return findParent(rootNode, target);
 }
 
-function inOrderPredecessor (rootNode, target) {
-  // Your code here 
+function inOrderPredecessor(rootNode, target) {
+  if (!rootNode || !target) return null;
+
+  const findNode = (node, targetVal) => {
+    if (!node) return null;
+
+    if (node.val === targetVal) return node;
+
+    const left = findNode(node.left, targetVal);
+    if (left) return left;
+
+    return findNode(node.right, targetVal);
+  };
+
+  const targetNode = findNode(rootNode, target);
+  if (!targetNode) return null;
+
+  if (targetNode.left) {
+    let current = targetNode.left;
+    while (current.right) {
+      current = current.right;
+    }
+    return current.val;
+  }
+
+  let parent = getParentNode(rootNode, target);
+  while (parent && parent.val > target) {
+    parent = getParentNode(rootNode, parent.val);
+  }
+
+  return parent ? parent.val : null;
 }
 
 function deleteNodeBST(rootNode, target) {
-  // Do a traversal to find the node. Keep track of the parent
+  if (!rootNode) return null;
 
-  // Undefined if the target cannot be found
+  let parent = null;
+  let current = rootNode;
 
-  // Set target based on parent
+  // Find the node to delete and its parent
+  while (current && current.val !== target) {
+    parent = current;
+    if (target < current.val) {
+      current = current.left;
+    } else {
+      current = current.right;
+    }
+  }
 
-  // Case 0: Zero children and no parent:
-  //   return null
+  // If the node with the target value doesn't exist
+  if (!current) return undefined;
 
-  // Case 1: Zero children:
-  //   Set the parent that points to it to null
+  // Case 1: Node to delete has no children
+  if (!current.left && !current.right) {
+    if (!parent) {
+      rootNode = null;
+    } else if (current === parent.left) {
+      parent.left = null;
+    } else {
+      parent.right = null;
+    }
+  }
+  // Case 2: Node to delete has one child
+  else if (!current.right) {
+    if (!parent) {
+      rootNode = current.left;
+    } else if (current === parent.left) {
+      parent.left = current.left;
+    } else {
+      parent.right = current.left;
+    }
+  } else if (!current.left) {
+    if (!parent) {
+      rootNode = current.right;
+    } else if (current === parent.left) {
+      parent.left = current.right;
+    } else {
+      parent.right = current.right;
+    }
+  }
+  // Case 3: Node to delete has two children
+  else {
+    let successor = current.right;
+    let successorParent = current;
+    while (successor.left) {
+      successorParent = successor;
+      successor = successor.left;
+    }
 
-  // Case 2: Two children:
-  //  Set the value to its in-order predecessor, then delete the predecessor
-  //  Replace target node with the left most child on its right side, 
-  //  or the right most child on its left side.
-  //  Then delete the child that it was replaced with.
+    // Replace the value of the node to delete with the value of the successor
+    current.val = successor.val;
 
-  // Case 3: One child:
-  //   Make the parent point to the child
+    // Delete the successor node (which is either a leaf or a node with right child only)
+    if (successor === successorParent.left) {
+      successorParent.left = successor.right;
+    } else {
+      successorParent.right = successor.right;
+    }
+  }
 
+  return rootNode;
 }
 
 module.exports = {
-    findMinBST,
-    findMaxBST,
-    findMinBT,
-    findMaxBT,
-    getHeight,
-    countNodes,
-    balancedTree,
-    getParentNode,
-    inOrderPredecessor,
-    deleteNodeBST
+  findMinBST,
+  findMaxBST,
+  findMinBT,
+  findMaxBT,
+  getHeight,
+  countNodes,
+  balancedTree,
+  getParentNode,
+  inOrderPredecessor,
+  deleteNodeBST
 }
